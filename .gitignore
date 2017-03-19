@@ -1,3 +1,18 @@
+# Project specific
+# =========================
+
+bin/
+src/main/resources/timeusage/*
+run*.txt
+
+# Eclipse specific
+# =========================
+
+.cache*
+.classpath
+.project
+.settings/
+
 *.class
 *.log
 
