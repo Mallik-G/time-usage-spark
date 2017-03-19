@@ -51,7 +51,6 @@ object TimeUsage {
     val headerColumns = rdd.first().split(",").to[List]
     // Compute the schema based on the first line of the CSV file
     val schema = dfSchema(headerColumns)
-
     val data =
       rdd
         .mapPartitionsWithIndex((i, it) => if (i == 0) it.drop(1) else it) // skip the header line
@@ -76,9 +75,10 @@ object TimeUsage {
   def dfSchema(columnNames: List[String]): StructType = {
     var ret = new StructType()
     val nullable = false
-    ret.add(columnNames.head, StringType, nullable)
+    // Must reassign ret as add returns a new StructType!
+    ret = ret.add(columnNames.head, StringType, nullable)
     for (col <- columnNames.tail) {
-      ret.add(col, DoubleType, nullable)
+      ret = ret.add(col, DoubleType, nullable)
     }
     ret
   }
@@ -195,17 +195,17 @@ object TimeUsage {
       when(c >= 15 && c <= 22, "young").when(c >= 23 && c <= 55, "active").otherwise("elder")
       c.as("age").cast(StringType)
     }
-    
+
     def sumHours(cols: List[Column]): Column = {
       (cols.reduce(_ + _) / 60).cast(DoubleType)
     }
-    
+
     val primaryNeedsProjection: Column = sumHours(primaryNeedsColumns).as("primaryNeeds")
     val workProjection: Column = sumHours(workColumns).as("work")
     val otherProjection: Column = sumHours(otherColumns).as("other")
-        
-    df//.select(primaryNeedsProjection, workProjection, otherProjection)
-      .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
+
+    df.select($"telfs")
+      //.select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
       .where($"telfs" <= 4) // Discard people who are not in labor force
   }
 
