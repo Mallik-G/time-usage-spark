@@ -18,6 +18,7 @@ object TimeUsage {
       .appName("Time Usage")
       .config("spark.master", "local[5]")
       .config("spark.executor.memory", "10g")
+      .config("spark.sql.warehouse.dir", "file:///C:/tmp/spark-warehouse")
       .getOrCreate()
 
   // For implicit conversions like converting RDDs to DataFrames
@@ -32,9 +33,15 @@ object TimeUsage {
   def timeUsageByLifePeriod(): Unit = {
     val (columns, initDf) = read("/timeusage/atussum.csv")
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+    //println(primaryNeedsColumns mkString ", ")
+    //println(workColumns mkString ", ")
+    //println(otherColumns mkString ", ")
+    //initDf.show()
+    //println(initDf.count())
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
-    val finalDf = timeUsageGrouped(summaryDf)
-    finalDf.show()
+    summaryDf.show()
+    //val finalDf = timeUsageGrouped(summaryDf)
+    //finalDf.show()
   }
 
   /** @return The read DataFrame along with its column names. */
@@ -173,14 +180,31 @@ object TimeUsage {
     workColumns: List[Column],
     otherColumns: List[Column],
     df: DataFrame): DataFrame = {
-    val workingStatusProjection: Column = ???
-    val sexProjection: Column = ???
-    val ageProjection: Column = ???
-
-    val primaryNeedsProjection: Column = ???
-    val workProjection: Column = ???
-    val otherProjection: Column = ???
-    df
+    val workingStatusProjection: Column = {
+      val c: Column = $"telfs"
+      when(c >= 1 && c < 3, "working").otherwise("not working")
+      c.as("working").cast(StringType)
+    }
+    val sexProjection: Column = {
+      val c: Column = $"tesex"
+      when(c === 1, "male").otherwise("female")
+      c.as("sex").cast(StringType)
+    }
+    val ageProjection: Column = {
+      val c: Column = $"teage"
+      when(c >= 15 && c <= 22, "young").when(c >= 23 && c <= 55, "active").otherwise("elder")
+      c.as("age").cast(StringType)
+    }
+    
+    def sumHours(cols: List[Column]): Column = {
+      (cols.reduce(_ + _) / 60).cast(DoubleType)
+    }
+    
+    val primaryNeedsProjection: Column = sumHours(primaryNeedsColumns).as("primaryNeeds")
+    val workProjection: Column = sumHours(workColumns).as("work")
+    val otherProjection: Column = sumHours(otherColumns).as("other")
+        
+    df//.select(primaryNeedsProjection, workProjection, otherProjection)
       .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
       .where($"telfs" <= 4) // Discard people who are not in labor force
   }

@@ -2,7 +2,8 @@
 # =========================
 
 bin/
-src/main/resources/timeusage/*
+src/main/resources/timeusage/
+spark-warehouse/
 run*.txt
 
 # Eclipse specific
