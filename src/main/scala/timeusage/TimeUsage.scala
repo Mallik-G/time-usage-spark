@@ -33,9 +33,14 @@ object TimeUsage {
     val (columns, initDf) = read("/timeusage/atussum.csv")
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+    println("summaryDf")
     summaryDf.show()
     val finalDf = timeUsageGrouped(summaryDf)
+    println("finalDf")
     finalDf.show()
+    val finalSqlDf = timeUsageGroupedSql(summaryDf)
+    println("finalSqlDf")
+    finalSqlDf.show()
   }
 
   /** @return The read DataFrame along with its column names. */
@@ -84,10 +89,11 @@ object TimeUsage {
   def row(line: List[String]): Row = {
     val head = Seq(line.head)
     val tail = line.tail.map {
-      v => {
-        if (v == null) 0D
-        else v.toDouble
-      }
+      v =>
+        {
+          if (v == null) 0D
+          else v.toDouble
+        }
     }
     Row.fromSeq(head ++ tail)
   }
@@ -199,7 +205,7 @@ object TimeUsage {
       c = c.as("age").cast(StringType)
       c
     }
-    
+
     def sumHours(cols: List[Column]): Column = {
       var ret = (cols.reduce(_ + _) / 60D).cast(DoubleType)
       ret = when(ret isNull, 0).otherwise(ret)
@@ -254,8 +260,7 @@ object TimeUsage {
    * @return SQL query equivalent to the transformation implemented in `timeUsageGrouped`
    * @param viewName Name of the SQL view to use
    */
-  def timeUsageGroupedSqlQuery(viewName: String): String =
-    ???
+  def timeUsageGroupedSqlQuery(viewName: String): String = "select working, sex, age, round(avg(primaryNeeds), 1) as primaryNeeds, round(avg(work), 1) as work, round(avg(other), 1) as other from summed group by working, sex, age order by working, sex, age"
 
   /**
    * @return A `Dataset[TimeUsageRow]` from the “untyped” `DataFrame`
