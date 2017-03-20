@@ -4,9 +4,8 @@ This repo contains my solution for an assignment from the Coursera course on [Bi
 
 ## Results
 
-+-----------+------+------+------------+----+-----+
 |    working|   sex|   age|primaryNeeds|work|other|
-+-----------+------+------+------------+----+-----+
+------------|------|------|------------|----|-----|
 |not working|female|active|        12.4| 0.5| 10.8|
 |not working|female| elder|        10.9| 0.4| 12.4|
 |not working|female| young|        12.5| 0.2| 11.1|
@@ -19,11 +18,10 @@ This repo contains my solution for an assignment from the Coursera course on [Bi
 |    working|  male|active|        10.8| 5.2|  7.8|
 |    working|  male| elder|        10.4| 4.8|  8.6|
 |    working|  male| young|        10.9| 3.7|  9.2|
-+-----------+------+------+------------+----+-----+
 
 (time spent on `primaryNeeds`, `work` and `other` activities, in hours) 
 
-Total run time: 37s (producing the same results in 3 formats: `DataFrame`, `DataFrame` from a SQL query and typed `DataSet`)
+Run time: 37s (producing the same results in 3 formats: `DataFrame`, `DataFrame` from a SQL query and typed `DataSet`)
 
 ## Instructions
 
