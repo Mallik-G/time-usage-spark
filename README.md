@@ -70,7 +70,7 @@ The second step is to implement the `timeUsageSummary` method, which projects th
 
 Each activity column will contain the sum of the columns related to the same activity of the initial dataset.
 
-Aggregate
+## Aggregate
 
 Finally, we want to compare the average time spent on each activity, for all the combinations of work status, sex and age.
 
@@ -78,7 +78,7 @@ We will implement the `timeUsageGrouped` method which computes the average numbe
 
 Now you can run the project and see what the final `DataFrame` contains. What do you see when you compare elderly men versus elderly women's time usage? How much time elder people allocate to leisure compared to active people? How much time do active employed people spend to work?
 
-Alternative ways to manipulate data
+## Alternative ways to manipulate data
 
 We can also implement this method by using a plain SQL query instead of the DataFrame API. Note that sometimes using the programmatic API to build queries is a lot easier than writing a plain SQL query. Can you think of a previous query that would have been a nightmare to write in plain SQL?
 
