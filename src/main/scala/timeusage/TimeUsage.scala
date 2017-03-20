@@ -310,8 +310,10 @@ object TimeUsage {
       .groupByKey(row => (row.working, row.sex, row.age))
       .agg(round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as[Double].name("primaryNeeds"),
         round(typed.avg[TimeUsageRow](_.work), 1).as[Double].name("work"),
-        round(typed.avg[TimeUsageRow](_.other), 1).as[Double].name("other")).as[TimeUsageRow]
-
+        round(typed.avg[TimeUsageRow](_.other), 1).as[Double].name("other"))
+      .map {
+        case (key, primaryNeeds, work, other) => TimeUsageRow(key._1, key._2, key._3, primaryNeeds, work, other)
+      }.orderBy($"working", $"sex", $"age")
   }
 }
 
