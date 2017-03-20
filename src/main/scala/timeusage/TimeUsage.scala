@@ -84,7 +84,10 @@ object TimeUsage {
   def row(line: List[String]): Row = {
     val head = Seq(line.head)
     val tail = line.tail.map {
-      v => v.toDouble
+      v => {
+        if (v == null) 0D
+        else v.toDouble
+      }
     }
     Row.fromSeq(head ++ tail)
   }
@@ -196,9 +199,11 @@ object TimeUsage {
       c = c.as("age").cast(StringType)
       c
     }
-
+    
     def sumHours(cols: List[Column]): Column = {
-      (cols.reduce(_ + _) / 60).cast(DoubleType)
+      var ret = (cols.reduce(_ + _) / 60D).cast(DoubleType)
+      ret = when(ret isNull, 0).otherwise(ret)
+      ret
     }
 
     val primaryNeedsProjection: Column = sumHours(primaryNeedsColumns).as("primaryNeeds")
