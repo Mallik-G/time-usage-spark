@@ -123,7 +123,6 @@ object TimeUsage {
     var primary = ListBuffer[Column]()
     var work = ListBuffer[Column]()
     var other = ListBuffer[Column]()
-
     def isPrimaryNeedActivity(columnName: String): Boolean = {
       val prefixes = List("t01", "t03", "t11", "t1801", "t1803")
       for (prefix <- prefixes) {
@@ -133,7 +132,6 @@ object TimeUsage {
       }
       false
     }
-
     def isWorkActivity(columnName: String): Boolean = {
       val prefixes = List("t05", "t1805")
       for (prefix <- prefixes) {
@@ -143,16 +141,27 @@ object TimeUsage {
       }
       false
     }
-
+    def isOtherActivity(columnName: String): Boolean = {
+      val prefixes = List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18")
+      for (prefix <- prefixes) {
+        if (columnName.startsWith(prefix)) {
+          return true
+        }
+      }
+      false
+    }
     for (name <- columnNames) {
       if (isPrimaryNeedActivity(name)) {
         primary += col(name)
       } else if (isWorkActivity(name)) {
         work += col(name)
-      } else {
+      } else if (isOtherActivity(name)) {
         other += col(name)
       }
     }
+    assert(!primary.isEmpty)
+    assert(!work.isEmpty)
+    assert(!other.isEmpty)
     (primary.toList, work.toList, other.toList)
   }
 
@@ -212,9 +221,7 @@ object TimeUsage {
     }
 
     def sumHours(cols: List[Column]): Column = {
-      var ret = (cols.reduce(_ + _) / 60D).cast(DoubleType)
-      ret = when(ret isNull, 0).otherwise(ret)
-      ret
+      cols.reduceLeft(_ + _).cast(DoubleType) / 60
     }
 
     val primaryNeedsProjection: Column = sumHours(primaryNeedsColumns).as("primaryNeeds")
@@ -276,7 +283,8 @@ object TimeUsage {
    */
   def timeUsageSummaryTyped(timeUsageSummaryDf: DataFrame): Dataset[TimeUsageRow] = {
     timeUsageSummaryDf.map {
-      row => TimeUsageRow(row.getAs[String]("working"),
+      row =>
+        TimeUsageRow(row.getAs[String]("working"),
           row.getAs[String]("sex"),
           row.getAs[String]("age"),
           row.getAs[Double]("primaryNeeds"),
@@ -300,10 +308,10 @@ object TimeUsage {
     import org.apache.spark.sql.expressions.scalalang.typed
     summed
       .groupByKey(row => (row.working, row.sex, row.age))
-      .agg(round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as[Double].name("primaryNeeds"), 
-          round(typed.avg[TimeUsageRow](_.work), 1).as[Double].name("work"),
-          round(typed.avg[TimeUsageRow](_.other), 1).as[Double].name("other")).as[TimeUsageRow]
-    
+      .agg(round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as[Double].name("primaryNeeds"),
+        round(typed.avg[TimeUsageRow](_.work), 1).as[Double].name("work"),
+        round(typed.avg[TimeUsageRow](_.other), 1).as[Double].name("other")).as[TimeUsageRow]
+
   }
 }
 
